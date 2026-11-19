@@ -1,0 +1,9 @@
+.git
+*.db
+*.db-shm
+*.db-wal
+*.exe
+.idea
+.env
+.env.*
+!.env.example

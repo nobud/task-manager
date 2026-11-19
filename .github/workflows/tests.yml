@@ -1,0 +1,46 @@
+name: Go
+
+on: [push]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:18-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: todo-test-password
+          POSTGRES_DB: scheduler_test
+        options: >-
+          --health-cmd "pg_isready -h 127.0.0.1 -U postgres -d scheduler_test"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+
+      - name: Display Go version
+        run: go version
+
+      - name: Check dependencies
+        run: go mod tidy -diff
+
+      - name: Run unit tests
+        run: go test ./...
+
+      - name: Run integration test
+        env:
+          DB_HOST: localhost
+          DB_USER: postgres
+          DB_PASSWORD: todo-test-password
+          DB_NAME: scheduler_test
+        run: go test -tags=integration ./tests -count=1
